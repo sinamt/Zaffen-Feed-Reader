@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Zaffen</title>
+
+<!-- libs -->
+<script src="/js/jquery.js"></script>
+<script src="/js/underscore.js"></script>
+<script src="/js/backbone.js"></script>
+
+<!-- client templating -->
+<script src="/js/mustache.js"></script>
+<script src="/js/ich.js"></script>
+
+<!-- app -->
+<script src="/js/app.js"></script>
+
+
+<!-- ICanHaz templates -->
+<script id="app" type="text/html">
+    <h1>Movie App</h1>
+    <ul id="movies"></ul>
+</script>
+
+
+
+<script id="movie" type="text/html">
+    <li id="{{ htmlId }}"><span class="title">{{ title }}</span> <span>{{ format }}</span></li>
+</script>
+
+
+
+<script>        
+$(document).ready(function () {
+      /*
+        // init our app
+        window.app = MovieAppController.init({
+            account: '{{ user.get_profile.account.slug }}',
+            // etc, etc
+        });
+
+        // draw our main view
+        $('body').append(app.view.render().el); 
+        */
+});     
+</script>
+
+</head>
+<body></body>
+</html>
