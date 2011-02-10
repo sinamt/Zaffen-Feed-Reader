@@ -23,12 +23,15 @@ else:
 
 class index:
   def GET(self):
-    return render.index()
+    f = open('./static/index.html')
+    s = f.read()
+    f.close()
+    return s
 
 class login:
   def GET(self):
 
-    if session['auth_token']:
+    if 'auth_token' in session:
       return 'ok'
 
     #post_data = web.data()
@@ -52,7 +55,9 @@ class login:
 class reader:
   def GET(self, path):
 
-    req = urllib2.Request("http://www.google.com/" + path, None, zaffen.getAuthHeader())
+    print "Fetching " + path + web.ctx.query
+
+    req = urllib2.Request("http://www.google.com/" + path + web.ctx.query, None, zaffen.getAuthHeader())
     f = urllib2.urlopen(req)
     s = f.read()
     f.close()

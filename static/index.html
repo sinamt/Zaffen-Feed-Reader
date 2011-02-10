@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Zaffen</title>
+
+<!-- libs -->
+<script src="/static/js/jquery.js"></script>
+<!-- 
+<script src="/static/js/underscore.js"></script>
+<script src="/static/js/backbone.js"></script>
+-->
+
+<!-- client templating -->
+<!-- 
+<script src="/static/js/mustache.js"></script>
+<script src="/static/js/ich.js"></script>
+-->
+<script src="/static/js/jquery.tmpl.js"></script>
+
+<!-- app -->
+<script src="/static/js/app.js"></script>
+
+<!-- css -->
+<link href="/static/css/app.css" type="text/css" rel="stylesheet"> 
+
+<!-- jquery.tmpl templates -->
+
+<script id="main" type="text/html">
+  <div id="main">
+    <ul id="sidenav">
+      {{each(cat_id, category) categories}}
+      <li class="sn_label"><a class="sn_label_anchor" href="/${cat_id}">${category.name}</a>
+        {{if category.subscriptions}}
+          <ul class="sn_sub">
+          {{each(idx,sub_id) category.subscriptions}}
+          <li class="sn_sub_item"><a class="sn_sub_anchor" href="">${$data.sub[sub_id].title}</a></li>
+          {{/each}}
+          </ul>
+        {{/if}}
+      </li>
+      {{/each}}
+    </ul>
+  </div>
+</script>
+
+<script id="sidenav_label" type="text/html">
+  <li class="sn_label"><a class="sn_label_anchor" href="">{{category.name}}</a>
+  <ul class="sn_label_feeds">
+  {{#category_subscriptions}}
+    <li><a href="">{{sub[id].title}}</a></li>
+  {{/category_subscriptions}}
+</script>
+
+</head>
+<body></body>
+</html>
