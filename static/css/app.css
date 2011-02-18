@@ -1,0 +1,36 @@
+#sidenav {
+  width: 20%;
+  padding: 2px;
+  float: left;
+}
+#content {
+  width: 79%;
+  padding: 2px;
+  float: left;
+}
+.sn_sub_item {
+}
+
+.sn_label_anchor, .sn_sub_anchor {
+  display: block;
+  color: black;
+  text-decoration: none;
+  padding-left: 5px;
+}
+.sn_label_anchor:hover, .sn_sub_anchor:hover {
+  background-color: #F3F7FC;
+}
+
+#sidenav ul, #sidenav li {
+  display: none;
+}
+#sidenav .unread ul, #sidenav li.unread {
+  display: block;
+}
+#sub-header {
+  padding: 2px;
+  background-color: #F3F7FC;
+}
+.sub-header-name {
+  font-weight: bold;
+}

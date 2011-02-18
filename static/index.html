@@ -21,34 +21,61 @@
 <script src="/static/js/app.js"></script>
 
 <!-- css -->
+<link href="/static/css/reset.css" type="text/css" rel="stylesheet"> 
 <link href="/static/css/app.css" type="text/css" rel="stylesheet"> 
 
 <!-- jquery.tmpl templates -->
 
-<script id="main" type="text/html">
+<script id="main-tmpl" type="text/html">
   <div id="main">
     <ul id="sidenav">
       {{each(cat_id, category) categories}}
-      <li class="sn_label"><a class="sn_label_anchor" href="/${cat_id}">${category.name}</a>
+      <li class="sn_label{{if category.unread > 0}} unread{{/if}}"><a class="sn_label_anchor" href="/${cat_id}">${category.name}{{if category.unread > 0}} (${category.unread}{{if category.unread >= 1000}}+{{/if}}){{/if}}</a>
         {{if category.subscriptions}}
           <ul class="sn_sub">
           {{each(idx,sub_id) category.subscriptions}}
-          <li class="sn_sub_item"><a class="sn_sub_anchor" href="">${$data.sub[sub_id].title}</a></li>
+            {{tmpl($data.sub[sub_id]) "#sidenav-sub-tmpl"}}
           {{/each}}
           </ul>
         {{/if}}
       </li>
       {{/each}}
     </ul>
+    <div id="content">
+      {{tmpl($data.current_sub) "#entry-list-tmpl"}}
+    </div>
   </div>
 </script>
 
-<script id="sidenav_label" type="text/html">
-  <li class="sn_label"><a class="sn_label_anchor" href="">{{category.name}}</a>
-  <ul class="sn_label_feeds">
-  {{#category_subscriptions}}
-    <li><a href="">{{sub[id].title}}</a></li>
-  {{/category_subscriptions}}
+<script id="entry-list-tmpl" type="text/html">
+  {{tmpl($data) "#sub-header-tmpl"}}
+  <div id="entries">
+  {{each(entry_id, entry) items}}
+    {{tmpl({entry_id: entry_id, entry: entry}) "#entry-list-item-tmpl"}}
+  {{/each}}
+  </div>
+</script>
+
+<script id="entry-list-item-tmpl" type="text/html">
+  <div id="entry_${entry_id}" class="entry-list-item">
+    <span class="entry-list-title">${$data.entry.title}</span>
+  </div>
+</script>
+
+<script id="sub-header-tmpl" type="text/html">
+  <div id="sub-header">
+    <span class="sub-header-name">${name}</span>
+  </div>
+</script>
+
+<script id="entry-tmpl" type="text/html">
+</script>
+
+<script id="sidenav-label-tmpl" type="text/html">
+</script>
+
+<script id="sidenav-sub-tmpl" type="text/html">
+  <li class="sn_sub_item{{if $data.unread > 0}} unread{{/if}}"><a class="sn_sub_anchor" href="/${$data.id}">${$data.title}{{if $data.unread > 0}} (${$data.unread}{{if $data.unread >= 1000}}+{{/if}}){{/if}}</a></li>
 </script>
 
 </head>
