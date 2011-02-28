@@ -50,10 +50,14 @@
 <script id="entry-list-tmpl" type="text/html">
   {{tmpl($data) "#sub-header-tmpl"}}
   <div id="entries">
+    {{tmpl($data) "#entries-tmpl"}}
+  </div>
+</script>
+
+<script id="entries-tmpl" type="text/html">
   {{each(entry_id, entry) items}}
     {{tmpl({entry_id: entry_id, entry: entry}) "#entry-list-item-tmpl"}}
   {{/each}}
-  </div>
 </script>
 
 <script id="entry-list-item-tmpl" type="text/html">

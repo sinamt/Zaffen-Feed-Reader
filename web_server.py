@@ -2,6 +2,7 @@ import web
 import urllib
 import urllib2
 import re
+import time
         
 urls = (
   '/(reader/api/.*)', 'reader',
@@ -55,18 +56,28 @@ class login:
 class reader:
   def GET(self, path):
 
-    print "Fetching " + path + web.ctx.query
+    #path = '/reader/api/0/stream/contents/feed/http%3A%2F%2Fen.wikipedia.org%2Fw%2Findex.php%3Ftitle%3DSpecial%3ANewPages%26feed%3Drss'
+    #print "Fetching " + path
+    print str(time.time()) + " Fetching " + urllib.unquote(path)
+    #print "web.ctx.path = " + web.ctx.path
+    print "web.ctx.query = " + web.ctx.query
 
-    req = urllib2.Request("http://www.google.com/" + path + web.ctx.query, None, zaffen.getAuthHeader())
+    #pprint.pprint(web.ctx)
+
+    req = urllib2.Request("http://www.google.com/" + urllib.quote(urllib.unquote(path)) + web.ctx.query, None, zaffen.getAuthHeader())
     f = urllib2.urlopen(req)
     s = f.read()
     f.close()
+
+    print str(time.time()) + " Fetch done."
+
     return s
 
 class zaffen:
   @staticmethod
   def getAuthHeader():
     return {'Authorization': "GoogleLogin auth=" + session['auth_token']}
+    #return {'Authorization': "GoogleLogin auth=DQAAALoAAADou8sfWJw56Nkh5o2PEgA1d-f9_vzN9-VAadMruu7uBRPZmHosU70d21t8EfLQXnHqsrYTJqt0NrLWSv2MMaaJm4cR786V9UgFlHnpLkEpxRbKqW0ThGLaF6sPafkk7DfFmU6jOsv8LVIkQgjzz6Epm-oEXrNDbuWhZyRMY2G2J_sKv3DIsF_jcM3IonTfXC7acv8uq6yB-SrC8UOYXnTuIKA1k0qJIbcLjBw7N5i3dSAiw4rW3JWjwf_9sc8DkjE" }
 
 
 if __name__ == "__main__":

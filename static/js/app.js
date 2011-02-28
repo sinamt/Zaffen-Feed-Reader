@@ -22,10 +22,14 @@ var z = {
 
   uncategorised_id: '__zaffen_uncategorised',
 
+  _loading_current_sub: false,
+
+  _current_sub_id: null,
+
   init: function() {
     z.initGrApi();
-    z.initEventHandlers();
     z.initMainWindow();
+    z.initEventHandlers();
   },
 
   initGrApi: function() {
@@ -44,6 +48,36 @@ var z = {
   },
 
   initEventHandlers: function() {
+    // Side nav label / feed click
+    //
+    $(".sn_label_anchor, .sn_sub_anchor").live('click', function(ev) {
+        var sub_id = $(this).attr('href');
+        z.setCurrentSubId(sub_id);
+        //debug(sub_id);
+        try {
+          z.loadEntriesForSubscription(sub_id);
+          } catch(err) {
+          debug("error: " + err.name + " " +err.message);
+          }
+        return false;
+    });
+
+    // DOMNodeInserted for body
+    //
+    $("body").bind("DOMNodeInserted",function(ev) {
+
+      var ev_target = $(ev.target);
+
+      //debug("DOMNodeInserted : ");
+      //debug(ev_target);
+
+      // #main node being inserted, initiate scroll listeners for #entries
+      //
+      if ($.inArray(ev_target.attr('id'), ['main', 'entries']) > -1) {
+        z.startListenerEntriesHeight();
+        z.startListenerEntryScroll();
+      }
+    });
   },
 
   initMainWindow: function() {
@@ -74,6 +108,7 @@ var z = {
     z.initData();
     
     z.render();
+
   },
 
   render: function() {
@@ -150,11 +185,155 @@ var z = {
     return name;
   },
 
+  setCurrentSubId: function(sub_id) {
+    z._current_sub_id = sub_id;
+  },
+
+  getCurrentSubId: function() {
+    return z._current_sub_id;
+  },
+
   fetchStartPage: function() {
     if (z.undef(z.data.prefs.start_page)) {
       return this;
     }
-    return z.grAjax('contents', z.contentsFetchSuccess, null, {stream: z.data.prefs.start_page, n: 50});
+    z.setCurrentSubId(z.data.prefs.start_page);
+    return z.fetchStreamContents(z.data.prefs.start_page, {n: 50});
+  },
+
+  fetchStreamContents: function(stream_id, extra_data) {
+    if (z.undef(stream_id)) {
+      return false;
+    }
+    if (z.undef(extra_data)) {
+      extra_data = {};
+    }
+
+    if (stream_id[0] == '/') {
+      stream_id = stream_id.substr(1);
+    }
+
+    var data = $.extend({stream: stream_id, n: 20, continuation: true}, extra_data);
+    return z.grAjax('contents', z.contentsFetchSuccess, null, data);
+  },
+
+  loadEntriesForSubscription: function(sub_id, options) {
+    if (z.isLoadingCurrentSub()) {
+      return false;
+    }
+    if (z.undef(options)) {
+      options = {};
+    }
+
+    z.loadingCurrentSub(true);
+
+    $.when(z.fetchStreamContents(sub_id))
+      .then(function(){
+        z.updateCurrentSubData();
+        z.renderCurrentSub(options);
+      })
+      .fail(function(){
+      })
+      .done(function(){
+        z.loadingCurrentSub(false);
+        z.loadMoreCurrentSubEntries();
+      });
+  },
+
+  loadEntriesForCurrentSubscription: function(options) {
+    debug("loadEntriesForCurrentSubscription");
+    z.loadEntriesForSubscription(z.getCurrentSubId(), options);
+  },
+
+  renderCurrentSub: function(options) {
+    if (z.def(options.render_type) && options.render_type == 'append') {
+      $("#entries-tmpl").tmpl(z.data.current_sub).appendTo($("#entries"));
+    } else {
+      $("#content").html('');
+      $("#entry-list-tmpl").tmpl(z.data.current_sub).appendTo($("#content"));
+    }
+  },
+
+  loadingCurrentSub: function(bool) {
+    z._loading_current_sub = bool;
+  },
+
+  isLoadingCurrentSub: function() {
+    return z._loading_current_sub;
+  },
+
+  startListenerEntryScroll: function() {
+    //debug("startListenerEntryScroll");
+    z.stopListenerEntryScroll();
+
+    // scroll does not seem to work with $.live(), so we are binding to #entries every time it is inserted
+    // into the DOM.
+    //
+    //$("#entries").live('scroll.pageless resize.pageless', z.watchEntriesScroll); //.trigger('scroll');
+    $("#entries").bind('scroll.pageless resize.pageless', z.watchEntriesScroll).trigger('scroll.pageless');
+  },
+
+  stopListenerEntryScroll: function() {
+    $("#entries").unbind('.pageless');
+  },
+
+  startListenerEntriesHeight: function() {
+    z.stopListenerEntriesHeight();
+    $(window).bind('resize.entries_height', z.watchEntriesHeight).trigger('resize.entries_height');
+  },
+
+  stopListenerEntriesHeight: function() {
+    $(window).unbind('.entries_height');
+  },
+
+  startListenerSideavHeight: function() {
+    z.stopListenerSidenavHeight();
+    $(window).bind('resize.sidenav_height', z.watchSidenavHeight).trigger('resize.sidenav_height');
+  },
+
+  stopListenerSidenavHeight: function() {
+    $(window).unbind('.sidenav_height');
+  },
+
+  watchEntriesScroll: function() {
+    //debug('z.getEntriesDistanceToBottom() = ' + z.getEntriesDistanceToBottom());
+    z.loadMoreCurrentSubEntries();
+  },
+
+  watchEntriesHeight: function() {
+    var entries = $("#entries");
+    entries.height($(window).height() - entries.attr('offsetTop'));
+  },
+
+  watchSidenavHeight: function() {
+    var sidenav = $("#sidenav");
+    sidenav.height($(window).height() - sidenav.attr('offsetTop'));
+  },
+
+  loadMoreCurrentSubEntries: function() {
+    if (z.isLoadingCurrentSub() == false) {
+      if (z.getEntriesDistanceToBottom() < 300 || z.lastEntryBottom() < $(window).height()) {
+        z.loadEntriesForCurrentSubscription({render_type: 'append'});
+      }
+    }
+  },
+
+  getEntriesDistanceToBottom: function() {
+    var entries = $("#entries");
+    if (entries.length <= 0) {
+      return false;
+    }
+    return entries[0].scrollHeight - entries.scrollTop() - entries.height();
+  },
+
+  getEntriesBottom: function() {
+    var entries = $("#entries");
+    return entries.attr('offsetTop') + entries.attr('scrollTop') + entries.attr('offsetHeight')
+  },
+
+  lastEntryBottom: function() {
+    var last_entry = $("#entries .entry-list-item:last");
+    return last_entry.attr('offsetTop') + last_entry.height();
   },
 
   initPrefsData: function() {
@@ -186,10 +365,23 @@ var z = {
     z.initPrefsData();
   },
 
-  contentsFetchSuccess: function(data) {
+  contentsFetchSuccess: function(data, options) {
+    z.data.current_sub = $.extend({}, data);
+    if (z.def(options.continuation) && options.continuation) {
+      if (z.def(z.raw.sub_data[data.id]) && z.def(z.raw.sub_data[data.id].items)) {
+        data.items = $.merge($.merge([], z.raw.sub_data[data.id].items), data.items);
+      }
+    }
+    //debug("contentsFetchSuccess data =");
+    //debug(data);
     z.raw.sub_data[data.id] = data;
-    z.data.current_sub = data;
+  },
 
+  getRawSubData: function(sub_id) {
+    if (z.def(z.raw.sub_data[sub_id])) {
+      return z.raw.sub_data[sub_id];
+    }
+    return false;
   },
 
   updateCurrentSubData: function() {
@@ -205,21 +397,23 @@ var z = {
     }
   },
 
-  grAjax: function(api_type, success_callback, error_callback, data) {
+  getGrApiUrl: function(api_type, data) {
     if (z.undef(z.gr_api[api_type])) {
       return false;
     }
-    if (z.undef(data)) {
-      data = {};
-    }
-
     var params = '';
 
     var url = z.gr_api_base + z.gr_api[api_type];
 
     switch(api_type) {
       case 'contents':
-        url += data.stream;
+        url += encodeURIComponent(data.stream);
+        if (data.continuation) {
+          var raw_stream_data = z.getRawSubData(data.stream);
+          if (raw_stream_data && z.def(raw_stream_data.continuation)) {
+            params += '&c=' + raw_stream_data.continuation;
+          }
+        }
         break;
 
       case 'feed':
@@ -235,7 +429,21 @@ var z = {
       params += '&n=' + data.n;
     }
 
-    url += '?' + z.gr_api_default_params + '&ck=' + (new Date()).getTime() + (z.empty(params) ? '' : '&' + params);
+    url += '?' + z.gr_api_default_params + '&ck=' + (new Date()).getTime() + (z.empty(params) ? '' : params);
+
+    return url;
+
+  },
+
+  grAjax: function(api_type, success_callback, error_callback, options) {
+    if (z.undef(z.gr_api[api_type])) {
+      return false;
+    }
+    if (z.undef(options)) {
+      options = {};
+    }
+
+    var url = z.getGrApiUrl(api_type, options);
 
     return $.ajax({
       url: url,
@@ -243,7 +451,7 @@ var z = {
       dataType: 'json'
       })
       .error(function(xhr, error_code, err) {
-        debug('Error: error_code for ' + url);
+        debug('Error: ' + error_code + ' for ' + url);
         if ($.isFunction(error_callback)) {
           error_callback.call(xhr, error_code, err);
         }
@@ -251,8 +459,9 @@ var z = {
       .success(function(data){
         debug(url);
         debug(data);
+        //debug(options);
         if ($.isFunction(success_callback)) {
-          success_callback(data);
+          success_callback(data, options);
         }
         //debug("ajax success for " + url);
       });
@@ -272,5 +481,7 @@ var z = {
 };
 
 z.init();
+
+window['z'] = z;
 
 });
