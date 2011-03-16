@@ -16,6 +16,7 @@
 <script src="/static/js/ich.js"></script>
 -->
 <script src="/static/js/jquery.tmpl.js"></script>
+<script src="/static/js/jquery.cookie.js"></script>
 
 <!-- app -->
 <script src="/static/js/app.js"></script>
@@ -61,8 +62,11 @@
 </script>
 
 <script id="entry-list-item-tmpl" type="text/html">
-  <div id="entry_${entry_id}" class="entry-list-item">
-    <span class="entry-list-title">${$data.entry.title}</span>
+  <div id="entry_${entry_id}" class="entry" data-id="${$data.entry.id}">
+    <div class="entry-list-nav">
+      <span class="entry-list-title">${$data.entry.title}</span>
+    </div>
+    {{tmpl($data.entry) "#entry-tmpl"}}
   </div>
 </script>
 
@@ -73,6 +77,13 @@
 </script>
 
 <script id="entry-tmpl" type="text/html">
+  <div class="entry-body">
+    <div class="entry-heading">${title}</div>
+  </div>
+</script>
+
+<script id="entry-content-tmpl" type="text/html">
+  <div class="entry-content">{{if $data.content}}{{html $data.content.content}}{{else}}{{html $data.summary.content}}{{/if}}</div>
 </script>
 
 <script id="sidenav-label-tmpl" type="text/html">
@@ -80,6 +91,10 @@
 
 <script id="sidenav-sub-tmpl" type="text/html">
   <li class="sn_sub_item{{if $data.unread > 0}} unread{{/if}}"><a class="sn_sub_anchor" href="/${$data.id}">${$data.title}{{if $data.unread > 0}} (${$data.unread}{{if $data.unread >= 1000}}+{{/if}}){{/if}}</a></li>
+</script>
+
+<script id="not-logged-in-tmpl" type="text/html">
+  <p><a href="/login" class="login-link">Login</a></p>
 </script>
 
 </head>

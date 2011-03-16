@@ -24,6 +24,14 @@ html {
   overflow-x: hidden;
 }
 
+.entry-body {
+  display: none;
+}
+
+.entry-list-nav {
+  cursor: pointer;
+}
+
 .sn_sub_item {
 }
 

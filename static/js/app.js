@@ -1,4 +1,5 @@
 $(document).ready(function(){
+
 var DEBUG = true;
 
 // Helper function to output debug statements
@@ -27,6 +28,44 @@ var z = {
   _current_sub_id: null,
 
   init: function() {
+    if (z.loggedIn()) {
+      z.initLoggedIn();
+    } else {
+      z.initNotLoggedIn();
+    }
+  },
+
+  loggedIn: function() {
+    // FIXME
+    if ($.cookie('user_id')) {
+      return true;
+    } else {
+      return false;
+    }
+  },
+
+  initNotLoggedIn: function() {
+                     /*
+    $(".login-link").live('click', function(ev){
+        $("body").html('<p>Logging in...</p>');
+        $.ajax({
+          url: '/login',
+          type: 'GET',
+          success: function(data) {
+            z.initLoggedIn();
+          },
+          error: function() {
+            $("#not-logged-in-tmpl").tmpl().appendTo($("body"));
+          }
+        });
+        return false;
+    });
+    */
+
+    $("#not-logged-in-tmpl").tmpl().appendTo($("body"));
+  },
+
+  initLoggedIn: function() {
     z.initGrApi();
     z.initMainWindow();
     z.initEventHandlers();
@@ -48,6 +87,7 @@ var z = {
   },
 
   initEventHandlers: function() {
+
     // Side nav label / feed click
     //
     $(".sn_label_anchor, .sn_sub_anchor").live('click', function(ev) {
@@ -71,12 +111,24 @@ var z = {
       //debug("DOMNodeInserted : ");
       //debug(ev_target);
 
-      // #main node being inserted, initiate scroll listeners for #entries
+      // #main oe #entries node being inserted, initiate scroll listeners for #entries
       //
       if ($.inArray(ev_target.attr('id'), ['main', 'entries']) > -1) {
         z.startListenerEntriesHeight();
         z.startListenerEntryScroll();
       }
+
+      // #main node being inserted, initiate scroll listeners for #entries
+      //
+      if ($.inArray(ev_target.attr('id'), ['main']) > -1) {
+        z.startListenerSidenavHeight();
+      }
+    });
+
+    // Entry clicked
+    //
+    $(".entry-list-nav").live('click', function(ev) {
+      z.toggleEntryOpen($(ev.target).closest(".entry"));
     });
   },
 
@@ -112,6 +164,7 @@ var z = {
   },
 
   render: function() {
+    $("body").html('');
     $("#main-tmpl").tmpl(z.data).appendTo($("body"));
 
     //$.each(z.data.categories,function(category_id,category) {
@@ -286,7 +339,7 @@ var z = {
     $(window).unbind('.entries_height');
   },
 
-  startListenerSideavHeight: function() {
+  startListenerSidenavHeight: function() {
     z.stopListenerSidenavHeight();
     $(window).bind('resize.sidenav_height', z.watchSidenavHeight).trigger('resize.sidenav_height');
   },
@@ -307,7 +360,11 @@ var z = {
 
   watchSidenavHeight: function() {
     var sidenav = $("#sidenav");
-    sidenav.height($(window).height() - sidenav.attr('offsetTop'));
+    sidenav.height($(window).height() - sidenav.attr('offsetTop') - z.getTopAndBottomSpace(sidenav));
+  },
+
+  getTopAndBottomSpace: function(el) {
+    return parseInt(el.css('margin-top')) + parseInt(el.css('margin-bottom')) + parseInt(el.css('padding-top')) + parseInt(el.css('padding-bottom'));
   },
 
   loadMoreCurrentSubEntries: function() {
@@ -332,7 +389,7 @@ var z = {
   },
 
   lastEntryBottom: function() {
-    var last_entry = $("#entries .entry-list-item:last");
+    var last_entry = $("#entries .entry:last");
     return last_entry.attr('offsetTop') + last_entry.height();
   },
 
@@ -397,6 +454,21 @@ var z = {
     }
   },
 
+  toggleEntryOpen: function(entry) {
+                     debug("toggleEntryOpen");
+    if (entry.hasClass("open")) {
+      z.getEntryBody(entry).hide();
+      entry.removeClass("open");
+    } else {
+      z.getEntryBody(entry).show();
+      entry.addClass("open");
+    }
+  },
+
+  getEntryBody: function(entry) {
+    return entry.find('.entry-body');
+  },
+
   getGrApiUrl: function(api_type, data) {
     if (z.undef(z.gr_api[api_type])) {
       return false;
@@ -407,7 +479,11 @@ var z = {
 
     switch(api_type) {
       case 'contents':
-        url += encodeURIComponent(data.stream);
+        // We need to double encode the url paramater to get around an apache bug with mod_rewrite:
+        // http://fgiasson.com/blog/index.php/2006/07/19/hack_for_the_encoding_of_url_into_url_pr/
+        //
+        url += encodeURIComponent(encodeURIComponent(data.stream));
+
         if (data.continuation) {
           var raw_stream_data = z.getRawSubData(data.stream);
           if (raw_stream_data && z.def(raw_stream_data.continuation)) {
