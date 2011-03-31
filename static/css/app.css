@@ -2,6 +2,14 @@ html {
   overflow: hidden;
 }
 
+a, a:hover, a:visited, a:active, a:link {
+  color: #4183C4;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
 
 #sidenav {
   width: 20%;
@@ -10,6 +18,7 @@ html {
   height: 500px;
   overflow-y: auto;
   overflow-x: hidden;
+  position: relative;
 }
 #content {
   width: 79%;
@@ -24,40 +33,94 @@ html {
   overflow-x: hidden;
 }
 
+.entry {
+  border: solid 2px #FFF;
+}
+
 .entry-body {
   display: none;
+  padding: 3px;
+  margin: 0 0 10px 10px;
+  max-width: 650px;
+}
+
+.open .entry-body {
+  display: block;
+}
+
+.selected {
+  border: solid 2px #DDD;
+}
+
+.entry-header {
+  padding: 5px 0;
+}
+
+.entry-header-host, .entry-list-host {
+  margin-left: 5px;
+}
+.entry-header-host {
+  font-size: 90%;
+}
+
+.entry-heading {
+  font-size: 110%;
 }
 
 .entry-list-nav {
   cursor: pointer;
 }
 
-.sn_sub_item {
-}
-
-.sn_label_anchor, .sn_sub_anchor {
+a.sn_label_anchor, a.sn_sub_anchor {
   display: block;
   color: black;
   text-decoration: none;
   padding-left: 5px;
 }
-.sn_label_anchor:hover, .sn_sub_anchor:hover {
+a.sn_label_anchor:hover, a.sn_sub_anchor:hover {
   background-color: #F3F7FC;
+  text-decoration: none;
 }
-.sn_sub_anchor {
-  padding-left: 15px;
+a.sn_label_anchor {
+  padding-left: 20px;
+}
+
+a.sn_sub_anchor {
+  padding-left: 19px;
 }
 
 #sidenav ul, #sidenav li {
   display: none;
 }
-#sidenav .unread ul, #sidenav li.unread {
+#sidenav .unread, #sidenav .open ul {
   display: block;
 }
+#sidenav .sn_sub {
+  display: none;
+}
+#sidenav .open .sn_sub {
+  display: block;
+}
+
+#sidenav li {
+  margin: 2px 0;
+}
+#sidenav .selected {
+  background-color: #F3F7FC;
+  border: none;
+}
+
 #sub-header {
   padding: 2px;
   background-color: #F3F7FC;
 }
 .sub-header-name {
   font-weight: bold;
+}
+
+.sidenav-expand-icon {
+  position: absolute;
+  color: #CCC;
+  font-size: 90%;
+  cursor: pointer;
 }

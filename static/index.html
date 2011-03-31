@@ -31,15 +31,7 @@
   <div id="main">
     <ul id="sidenav">
       {{each(cat_id, category) categories}}
-      <li class="sn_label{{if category.unread > 0}} unread{{/if}}"><a class="sn_label_anchor" href="/${cat_id}">${category.name}{{if category.unread > 0}} (${category.unread}{{if category.unread >= 1000}}+{{/if}}){{/if}}</a>
-        {{if category.subscriptions}}
-          <ul class="sn_sub">
-          {{each(idx,sub_id) category.subscriptions}}
-            {{tmpl($data.sub[sub_id]) "#sidenav-sub-tmpl"}}
-          {{/each}}
-          </ul>
-        {{/if}}
-      </li>
+        {{tmpl({item: category, type: 'label', sub: sub, id: cat_id, current_sub_id: current_sub.id}) "#sidenav-item-tmpl"}}
       {{/each}}
     </ul>
     <div id="content">
@@ -56,15 +48,16 @@
 </script>
 
 <script id="entries-tmpl" type="text/html">
-  {{each(entry_id, entry) items}}
-    {{tmpl({entry_id: entry_id, entry: entry}) "#entry-list-item-tmpl"}}
+  {{each(_idx, entry) items}}
+    {{tmpl({entry_id: entry.index, entry: entry}) "#entry-list-item-tmpl"}}
   {{/each}}
 </script>
 
 <script id="entry-list-item-tmpl" type="text/html">
-  <div id="entry_${entry_id}" class="entry" data-id="${$data.entry.id}">
+  <div id="entry-${entry_id}" class="entry" data-index="${entry_id}" data-id="${$data.entry.id}">
     <div class="entry-list-nav">
-      <span class="entry-list-title">${$data.entry.title}</span>
+      <span class="entry-list-title">${entry.title}</span>
+      <span class="entry-list-host">${entry.hostname}</span>
     </div>
     {{tmpl($data.entry) "#entry-tmpl"}}
   </div>
@@ -78,7 +71,10 @@
 
 <script id="entry-tmpl" type="text/html">
   <div class="entry-body">
-    <div class="entry-heading">${title}</div>
+    <div class="entry-header">
+      <a href="${alternate[0].href}" class="entry-heading" target="_blank">${title}</a>
+      <span class="entry-header-host">${hostname}</span>
+    </div>
   </div>
 </script>
 
@@ -86,11 +82,28 @@
   <div class="entry-content">{{if $data.content}}{{html $data.content.content}}{{else}}{{html $data.summary.content}}{{/if}}</div>
 </script>
 
-<script id="sidenav-label-tmpl" type="text/html">
+<script id="sidenav-item-tmpl" type="text/html">
+  <li class="sn_${type}_item{{if $data.item.unread > 0}} unread{{/if}}{{if $data.current_sub_id == $data.id}} open{{/if}}">
+    {{if type == 'label'}}
+      {{if $data.current_sub_id == $data.id}}
+        {{tmpl({type: 'close'}) "#sidenav-item-expand-icon-tmpl"}}
+      {{else}}
+        {{tmpl({type: 'open'}) "#sidenav-item-expand-icon-tmpl"}}
+      {{/if}}
+    {{/if}}
+    <a class="sn_${type}_anchor{{if $data.current_sub_id == $data.id}} selected{{/if}}" href="/${$data.id}">{{if $data.item.name}}${$data.item.name}{{else}}${$data.item.title}{{/if}}{{if $data.item.unread > 0}} (${$data.item.unread}{{if $data.item.unread >= 1000}}+{{/if}}){{/if}}</a>
+    {{if $data.item.subscriptions}}
+      <ul class="sn_sub">
+      {{each(idx,sub_id) $data.item.subscriptions}}
+        {{tmpl({item: $data.sub[sub_id], type: 'sub', id: sub_id, current_sub_id: current_sub_id}) "#sidenav-item-tmpl"}}
+      {{/each}}
+      </ul>
+    {{/if}}
+  </li>
 </script>
 
-<script id="sidenav-sub-tmpl" type="text/html">
-  <li class="sn_sub_item{{if $data.unread > 0}} unread{{/if}}"><a class="sn_sub_anchor" href="/${$data.id}">${$data.title}{{if $data.unread > 0}} (${$data.unread}{{if $data.unread >= 1000}}+{{/if}}){{/if}}</a></li>
+<script id="sidenav-item-expand-icon-tmpl" type="text/html">
+  <span class="sidenav-expand-icon sidenav-expand-${type}-icon">[{{if $data.type == 'open'}}+{{else}}-{{/if}}]</span>
 </script>
 
 <script id="not-logged-in-tmpl" type="text/html">
