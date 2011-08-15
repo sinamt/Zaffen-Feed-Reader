@@ -1,0 +1,6 @@
+Zaffen is a very basic feed reader App that utilises Google Reader&trade; as it's backend. Simply login with your Google Account and all your feeds from Google Reader&trade; will be available in Zaffen.
+
+To install Zaffen:
+
+1. Install webpy.
+2. pythin web_server.py
