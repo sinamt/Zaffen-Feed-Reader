@@ -2,6 +2,10 @@ html {
   overflow: hidden;
 }
 
+html, body {
+  font-family: arial,helvetica,sans-serif;
+}
+
 a, a:hover, a:visited, a:active, a:link {
   color: #4183C4;
   text-decoration: none;
@@ -123,4 +127,26 @@ a.sn_sub_anchor {
   color: #CCC;
   font-size: 90%;
   cursor: pointer;
+}
+
+.index h1 {
+  font-size: 4em;
+  font-weight: normal;
+  letter-spacing: -2px;
+  margin: 10px 0;
+}
+
+.index h2 {
+  font-size: 1.5em;
+  font-weight: normal;
+  letter-spacing: -2px;
+  margin: 10px 0;
+}
+
+.index {
+  margin: 50px 200px;
+}
+
+.index p {
+  margin: 50px 0;
 }
